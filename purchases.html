@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>المشتريات</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">إدارة المصروفات</p>
+      <h1>المشتريات والمخزون</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a href="orders.html">إضافة طلب</a>
+    <a href="order-list.html">قائمة الطلبات</a>
+    <a href="customers.html">العملاء والديون</a>
+    <a class="active" href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main class="layout">
+    <section class="summary-grid compact-summary" aria-label="ملخص المشتريات">
+      <article class="metric">
+        <span>المشتريات</span>
+        <strong id="totalPurchases">0</strong>
+      </article>
+      <article class="metric">
+        <span>المخزون المتاح</span>
+        <strong id="totalStock">0</strong>
+      </article>
+      <article class="metric">
+        <span>الكمية المباعة</span>
+        <strong id="totalQuantity">0</strong>
+      </article>
+      <article class="metric good" data-profit>
+        <span>صافي الأرباح</span>
+        <strong id="totalProfit">0</strong>
+      </article>
+      <article class="metric" data-permission="viewSalesTotals">
+        <span>إجمالي المبيعات</span>
+        <strong id="totalSales">0</strong>
+      </article>
+    </section>
+
+    <section class="panel quick-order-panel">
+      <div class="panel-head split">
+        <div>
+          <h2>إضافة مشتريات سريع</h2>
+          <p>اكتب المادة والكمية والتكلفة، ثم احفظ مباشرة.</p>
+        </div>
+        <div class="top-form-actions">
+          <button id="purchaseSubmit" class="primary" type="submit" form="purchaseForm">حفظ المشتريات</button>
+          <button id="cancelPurchaseEdit" type="button" form="purchaseForm" hidden>إلغاء التعديل</button>
+        </div>
+      </div>
+      <form id="purchaseForm" class="order-form quick-order-form" novalidate>
+        <div class="form-section">
+          <div class="form-grid quick-purchase-row">
+            <label>
+              اسم المادة
+              <input id="purchaseItem" required placeholder="مثال: علب تغليف" autofocus>
+            </label>
+            <label>
+              ربط بمنتج
+              <select id="purchaseProductId">
+                <option value="">بدون ربط</option>
+              </select>
+            </label>
+            <label>
+              تاريخ الشراء
+              <input id="purchaseDate" type="date" required>
+            </label>
+            <label>
+              الكمية
+              <input id="purchaseQty" required inputmode="numeric" value="1">
+            </label>
+            <label>
+              الوحدة
+              <input id="purchaseUnit" required list="purchaseUnitList" placeholder="مثال: صندوق / متر / لتر">
+              <datalist id="purchaseUnitList">
+                <option value="كيلو"></option>
+                <option value="كرتونة"></option>
+                <option value="كروز"></option>
+                <option value="حبة"></option>
+              </datalist>
+            </label>
+            <label>
+              تكلفة الوحدة
+              <input id="purchaseCost" required inputmode="decimal" value="0">
+            </label>
+            <div class="inline-total">
+              <span>إجمالي السطر</span>
+              <strong id="purchaseDraftTotal">0</strong>
+            </div>
+            <button id="addPurchaseItem" type="button">إضافة للقائمة</button>
+          </div>
+          <div class="order-items-box">
+            <div class="cart-head">
+              <div>
+                <h3>قائمة المشتريات</h3>
+                <p><span id="purchaseItemsCount">0</span> مواد - الإجمالي <strong id="purchaseCartTotal">0</strong></p>
+              </div>
+              <button id="clearPurchaseDraft" class="ghost danger" type="button">تفريغ القائمة</button>
+            </div>
+            <div class="table-wrap mini-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>المادة</th>
+                    <th>الكمية</th>
+                    <th>تكلفة الوحدة</th>
+                    <th>الإجمالي</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="purchaseDraftTable"></tbody>
+              </table>
+            </div>
+            <p id="emptyPurchaseDraft" class="empty show">قائمة المشتريات فارغة.</p>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>سجل المشتريات</h2>
+        <p>إجمالي كل سطر = الكمية × تكلفة الوحدة.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>المادة</th>
+              <th>الكمية</th>
+              <th>الإجمالي</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="purchasesTable"></tbody>
+        </table>
+      </div>
+      <p id="emptyPurchases" class="empty">لا توجد مشتريات بعد.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

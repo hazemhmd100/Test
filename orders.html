@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>إضافة طلب</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">إدارة الطلبات</p>
+      <h1>إضافة طلب سريع</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a class="active" href="orders.html">إضافة طلب</a>
+    <a href="order-list.html">قائمة الطلبات</a>
+    <a href="customers.html">العملاء والديون</a>
+    <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main class="layout">
+    <section class="panel quick-order-panel">
+      <div class="panel-head split">
+        <div>
+          <h2>إضافة طلب سريع</h2>
+          <p>اكتب العميل، اضغط على المنتجات، ثم احفظ الطلب.</p>
+        </div>
+        <div class="top-form-actions">
+          <button id="orderSubmit" class="primary" type="submit" form="orderForm">حفظ الطلب</button>
+          <button id="cancelOrderEdit" type="button" form="orderForm" hidden>إلغاء التعديل</button>
+          <a class="button-link" href="order-list.html">قائمة الطلبات</a>
+          <a class="button-link" href="products.html" data-permission="viewProducts">إضافة منتج</a>
+        </div>
+      </div>
+      <form id="orderForm" class="order-form quick-order-form">
+        <div class="form-section">
+          <div class="form-grid quick-customer-row">
+            <label>
+              اسم العميل
+              <input id="customerName" required list="customerNameList" placeholder="اسم العميل" autofocus>
+              <datalist id="customerNameList"></datalist>
+            </label>
+            <label>
+              الهاتف
+              <input id="customerPhone" inputmode="tel" list="customerPhoneList" placeholder="اختياري">
+              <datalist id="customerPhoneList"></datalist>
+            </label>
+            <label>
+              تاريخ الطلب
+              <input id="orderDate" type="date" required>
+            </label>
+            <label>
+              دفعة مقدمة
+              <input id="paidAmount" inputmode="decimal" value="0">
+            </label>
+            <label>
+              الخصم
+              <input id="discountAmount" inputmode="decimal" value="0">
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section quick-products-section">
+          <div class="product-picker">
+            <div class="picker-head">
+              <strong>إضافة بالضغط</strong>
+              <span>اضغط على المنتج لإضافته للسلة مباشرة</span>
+            </div>
+            <div id="productQuickList" class="product-chip-grid"></div>
+            <p id="emptyQuickProducts" class="empty show">أضف منتجات أولًا من صفحة المنتجات.</p>
+            <div class="external-product-box">
+              <div class="picker-head">
+                <strong>منتج خارجي</strong>
+                <span>يحسب في الطلب فقط ولا يخصم من المخزون</span>
+              </div>
+              <div class="form-grid external-product-row">
+                <label>
+                  الاسم
+                  <input id="externalProductName" placeholder="مثال: منتج خارجي">
+                </label>
+                <label>
+                  سعر البيع
+                  <input id="externalProductPrice" inputmode="decimal" value="0">
+                </label>
+                <label>
+                  التكلفة
+                  <input id="externalProductCost" inputmode="decimal" value="0">
+                </label>
+                <label>
+                  الكمية
+                  <input id="externalProductQty" inputmode="numeric" value="1">
+                </label>
+                <button id="addExternalProduct" type="button">إضافة للسلة</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="order-items-box">
+            <div class="cart-head">
+              <div>
+                <h3>سلة الطلب</h3>
+                <p><span id="cartItemsCount">0</span> منتجات - خارجي <span id="externalCartCount">0</span> / <strong id="externalCartTotal">0</strong> - قبل الخصم <strong id="cartSubtotal">0</strong> - بعد الخصم <strong id="cartTotal">0</strong></p>
+              </div>
+              <button id="clearCart" class="ghost danger" type="button">تفريغ السلة</button>
+            </div>
+            <div class="table-wrap mini-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>المنتج</th>
+                    <th>الكمية</th>
+                    <th>الإجمالي</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="orderItemsTable"></tbody>
+              </table>
+            </div>
+            <p id="emptyOrderItems" class="empty show">السلة فارغة.</p>
+          </div>
+        </div>
+
+        <div class="form-section final-order-row">
+          <label>
+            ملاحظات
+            <input id="notes" placeholder="اختياري">
+          </label>
+          <label class="check-field">
+            <input id="reviewed" type="checkbox">
+            تمت المراجعة
+          </label>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

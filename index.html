@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>لوحة المبيعات</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">لوحة رئيسية</p>
+      <h1>حاسبة المبيعات والديون والطلبات</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a class="active" href="index.html">الرئيسية</a>
+    <a href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a href="orders.html">إضافة طلب</a>
+    <a href="order-list.html">قائمة الطلبات</a>
+    <a href="customers.html">العملاء والديون</a>
+    <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main class="layout">
+    <section class="summary-grid" aria-label="ملخص الحسابات">
+      <article class="metric" data-permission="viewSalesTotals">
+        <span>إجمالي المبيعات</span>
+        <strong id="totalSales">0</strong>
+      </article>
+      <article class="metric" data-permission="viewSalesTotals">
+        <span>المبالغ المدفوعة</span>
+        <strong id="totalPaid">0</strong>
+      </article>
+      <article class="metric warn" data-permission="viewDebtTotals">
+        <span>الديون المتبقية</span>
+        <strong id="totalDebt">0</strong>
+      </article>
+      <article class="metric good" data-profit>
+        <span>صافي الأرباح</span>
+        <strong id="totalProfit">0</strong>
+      </article>
+      <article class="metric">
+        <span>العملاء</span>
+        <strong id="customersCount">0</strong>
+      </article>
+      <article class="metric">
+        <span>الكمية المباعة</span>
+        <strong id="totalQuantity">0</strong>
+      </article>
+      <article class="metric" data-permission="viewPurchases">
+        <span>المشتريات</span>
+        <strong id="totalPurchases">0</strong>
+      </article>
+      <article class="metric" data-permission="viewProducts">
+        <span>المنتجات</span>
+        <strong id="productsCount">0</strong>
+      </article>
+    </section>
+
+    <section class="panel" data-permission="viewQuickActions">
+      <div class="panel-head split">
+        <div>
+          <h2>إجراءات سريعة</h2>
+          <p>انتقل مباشرة للصفحة التي تحتاجها أثناء العمل اليومي.</p>
+        </div>
+      </div>
+      <div class="quick-actions">
+        <a href="orders.html">إضافة طلب جديد</a>
+        <a href="order-list.html">قائمة الطلبات</a>
+        <a href="products.html" data-permission="viewProducts">إضافة منتج</a>
+        <a href="customers.html">متابعة الديون</a>
+        <a href="purchases.html" data-permission="viewPurchases">إضافة مشتريات</a>
+      </div>
+    </section>
+
+    <section class="daily-summary-section" aria-labelledby="dailySummaryTitle">
+      <div class="panel-head">
+        <h2 id="dailySummaryTitle">ملخص اليوم</h2>
+        <p>حساب سريع حسب طلبات ومشتريات اليوم.</p>
+      </div>
+      <div class="summary-grid compact-summary">
+        <article class="metric">
+          <span>طلبات اليوم</span>
+          <strong id="dailyOrders">0</strong>
+        </article>
+        <article class="metric">
+          <span>مبيعات اليوم</span>
+          <strong id="dailySales">0</strong>
+        </article>
+        <article class="metric">
+          <span>مدفوع اليوم</span>
+          <strong id="dailyPaid">0</strong>
+        </article>
+        <article class="metric warn">
+          <span>ديون اليوم</span>
+          <strong id="dailyDebt">0</strong>
+        </article>
+        <article class="metric">
+          <span>مشتريات اليوم</span>
+          <strong id="dailyPurchases">0</strong>
+        </article>
+        <article class="metric good" data-profit>
+          <span>صافي ربح اليوم</span>
+          <strong id="dailyProfit">0</strong>
+        </article>
+        <article class="metric">
+          <span>كمية اليوم</span>
+          <strong id="dailyQuantity">0</strong>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
