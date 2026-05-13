@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>المنتجات</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">تفاصيل المنتجات</p>
+      <h1>المنتجات والأسعار</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a href="index.html">الرئيسية</a>
+    <a class="active" href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a href="orders.html">إضافة طلب</a>
+    <a href="order-list.html">قائمة الطلبات</a>
+    <a href="customers.html">العملاء والديون</a>
+    <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main class="layout">
+    <section class="summary-grid compact-summary" aria-label="ملخص المنتجات">
+      <article class="metric">
+        <span>المنتجات</span>
+        <strong id="productsCount">0</strong>
+      </article>
+      <article class="metric">
+        <span>المخزون المتاح</span>
+        <strong id="totalStock">0</strong>
+      </article>
+      <article class="metric" data-permission="viewSalesTotals">
+        <span>إجمالي المبيعات</span>
+        <strong id="totalSales">0</strong>
+      </article>
+      <article class="metric good" data-profit>
+        <span>صافي الأرباح</span>
+        <strong id="totalProfit">0</strong>
+      </article>
+      <article class="metric">
+        <span>الكمية المباعة</span>
+        <strong id="totalQuantity">0</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>إضافة منتج</h2>
+        <p>هذه التفاصيل ستستخدم تلقائيًا عند إنشاء طلب جديد.</p>
+      </div>
+      <form id="productForm" class="form-grid compact">
+        <label>
+          اسم المنتج
+          <input id="newProductName" required placeholder="مثال: قميص">
+        </label>
+        <label>
+          سعر البيع
+          <input id="newProductPrice" required inputmode="decimal" value="0">
+        </label>
+        <label>
+          تكلفة المنتج
+          <input id="newProductCost" required inputmode="decimal" value="0">
+        </label>
+        <button class="primary" type="submit">إضافة المنتج</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head split">
+        <div>
+          <h2>قائمة المنتجات</h2>
+          <p>احذف المنتج بضغطة واحدة، والطلبات القديمة تبقى محفوظة كما هي.</p>
+        </div>
+        <a class="button-link" href="orders.html">طلب جديد</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>المنتج</th>
+              <th>سعر البيع</th>
+              <th>التكلفة</th>
+              <th data-profit>ربح الوحدة</th>
+              <th>المشترى</th>
+              <th>المباع</th>
+              <th>المخزون</th>
+              <th>عدد الطلبات</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="productsTable"></tbody>
+        </table>
+      </div>
+      <p id="emptyProducts" class="empty">لا توجد منتجات بعد.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

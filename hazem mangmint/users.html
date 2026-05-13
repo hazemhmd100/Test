@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>المستخدمين والصلاحيات</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">إدارة النظام</p>
+      <h1>المستخدمين والصلاحيات</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a href="orders.html">إضافة طلب</a>
+    <a href="order-list.html">قائمة الطلبات</a>
+    <a href="customers.html">العملاء والديون</a>
+    <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a class="active" href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>إضافة مستخدم</h2>
+        <p>المدير يضيف المستخدم ثم يحدد صلاحياته من الجدول.</p>
+      </div>
+      <form id="userForm" class="form-grid user-form-row">
+        <label>
+          اسم الموظف
+          <input id="userDisplayName" required placeholder="مثال: أحمد">
+        </label>
+        <label>
+          اسم المستخدم
+          <input id="userUsername" required autocomplete="username" placeholder="ahmad">
+        </label>
+        <label>
+          كلمة المرور
+          <input id="userPassword" required type="password" autocomplete="new-password">
+        </label>
+        <button class="primary" type="submit">حفظ المستخدم</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>قائمة الصلاحيات</h2>
+        <p>أزل علامة الصح عن أي صلاحية لا تريدها للمستخدم.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الموظف</th>
+              <th>اسم المستخدم</th>
+              <th>النوع</th>
+              <th>الصلاحيات</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

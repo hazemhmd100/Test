@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>العملاء والديون</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">متابعة العملاء</p>
+      <h1>العملاء والديون</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a href="orders.html">إضافة طلب</a>
+    <a href="order-list.html">قائمة الطلبات</a>
+    <a class="active" href="customers.html">العملاء والديون</a>
+    <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main class="layout">
+    <section class="summary-grid compact-summary" aria-label="ملخص العملاء">
+      <article class="metric">
+        <span>العملاء</span>
+        <strong id="customersCount">0</strong>
+      </article>
+      <article class="metric warn" data-permission="viewDebtTotals">
+        <span>الديون المتبقية</span>
+        <strong id="totalDebt">0</strong>
+      </article>
+      <article class="metric" data-permission="viewSalesTotals">
+        <span>المبالغ المدفوعة</span>
+        <strong id="totalPaid">0</strong>
+      </article>
+      <article class="metric" data-permission="viewSalesTotals">
+        <span>إجمالي المبيعات</span>
+        <strong id="totalSales">0</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>إضافة عميل بدين مباشر</h2>
+        <p>استخدمها عندما يكون العميل عليه مبلغ بدون طلب مسجل.</p>
+      </div>
+      <form id="directCustomerForm" class="form-grid direct-customer-row">
+        <label>
+          اسم العميل
+          <input id="directCustomerName" required list="customerNameList" placeholder="اسم العميل">
+        </label>
+        <label>
+          رقم الهاتف
+          <input id="directCustomerPhone" list="customerPhoneList" placeholder="رقم الهاتف">
+        </label>
+        <label>
+          المبلغ المطلوب
+          <input id="directCustomerDebt" required inputmode="decimal" value="0">
+        </label>
+        <label>
+          تاريخ الدين
+          <input id="directCustomerDate" type="date" required>
+        </label>
+        <label>
+          ملاحظة
+          <input id="directCustomerNote" placeholder="سبب الدين أو التفاصيل">
+        </label>
+        <button class="primary" type="submit">حفظ العميل</button>
+        <datalist id="customerNameList"></datalist>
+        <datalist id="customerPhoneList"></datalist>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head split">
+        <div>
+          <h2>جدول العملاء والديون</h2>
+          <p>تجميع تلقائي لكل عميل حسب الطلبات المسجلة.</p>
+        </div>
+        <label class="search">
+          بحث
+          <input id="searchCustomers" placeholder="اسم، هاتف، دين، ملاحظة">
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>العميل</th>
+              <th>الهاتف</th>
+              <th>طلبات/ديون</th>
+              <th>إجمالي</th>
+              <th>مدفوع</th>
+              <th>دين</th>
+              <th>رصيد</th>
+              <th>حركة رصيد</th>
+              <th>دفعة</th>
+              <th>تفاصيل</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="customersTable"></tbody>
+        </table>
+      </div>
+      <p id="emptyCustomers" class="empty">لا توجد بيانات عملاء بعد.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

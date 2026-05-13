@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>قائمة الطلبات</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">متابعة الطلبات</p>
+      <h1>قائمة الطلبات</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a href="orders.html">إضافة طلب</a>
+    <a class="active" href="order-list.html">قائمة الطلبات</a>
+    <a href="customers.html">العملاء والديون</a>
+    <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-head split">
+        <div>
+          <h2>قائمة الطلبات</h2>
+          <p>يمكن تسجيل الدفع، تعديل الطلب، التحويل، المراجعة، أو الحذف من الجدول.</p>
+        </div>
+        <div class="row-actions">
+          <input id="searchOrders" class="search" placeholder="بحث عن عميل أو منتج">
+          <a class="button-link" href="orders.html">طلب جديد</a>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>العميل</th>
+              <th>التاريخ</th>
+              <th>المنتج</th>
+              <th>الكمية</th>
+              <th>الإجمالي</th>
+              <th>الخصم</th>
+              <th>المدفوع</th>
+              <th>الدين</th>
+              <th>رصيد</th>
+              <th>التحويل</th>
+              <th>المراجعة</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTable"></tbody>
+        </table>
+      </div>
+      <p id="emptyOrders" class="empty">لا توجد طلبات بعد.</p>
+    </section>
+  </main>
+
+  <template id="orderRowTemplate">
+    <tr>
+      <td data-cell="customer"></td>
+      <td data-cell="date"></td>
+      <td data-cell="product"></td>
+      <td data-cell="quantity"></td>
+      <td data-cell="total"></td>
+      <td data-cell="discount"></td>
+      <td data-cell="paid"></td>
+      <td data-cell="debt"></td>
+      <td data-cell="credit"></td>
+      <td>
+        <select data-action="transfer" aria-label="التحويل إلى">
+          <option value="">بدون تحويل</option>
+          <option value="كاش">كاش</option>
+          <option value="بنك">بنك</option>
+          <option value="محفظة جوال">محفظة جوال</option>
+          <option value="محفظة بال بي">محفظة بال بي</option>
+        </select>
+      </td>
+      <td><input data-action="reviewed" type="checkbox" aria-label="تمت المراجعة"></td>
+      <td class="row-actions">
+        <button class="ghost edit" data-action="edit" type="button">تعديل</button>
+        <button class="ghost edit" data-action="pay" type="button">تسجيل دفع</button>
+        <button class="ghost danger" data-action="delete" type="button">حذف</button>
+      </td>
+    </tr>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

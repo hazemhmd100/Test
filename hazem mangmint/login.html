@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تسجيل الدخول</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <section class="auth-card">
+      <div class="auth-head">
+        <p class="eyebrow">نظام المبيعات</p>
+        <h1>تسجيل الدخول</h1>
+        <p>ادخل باسم المستخدم حتى تفتح صفحات المبيعات والديون.</p>
+      </div>
+
+      <div class="auth-grid auth-grid-single">
+        <form id="loginForm" class="auth-form">
+          <h2>دخول مستخدم</h2>
+          <label>
+            اسم المستخدم
+            <input id="loginUsername" required autocomplete="username" placeholder="admin">
+          </label>
+          <label>
+            كلمة المرور
+            <input id="loginPassword" required type="password" autocomplete="current-password" placeholder="1234">
+          </label>
+          <button class="primary" type="submit">دخول</button>
+          <p class="auth-hint">أول دخول: المستخدم admin وكلمة المرور 1234.</p>
+        </form>
+      </div>
+
+      <p id="authMessage" class="auth-message" role="status"></p>
+    </section>
+  </main>
+
+  <script src="login.js"></script>
+</body>
+</html>
