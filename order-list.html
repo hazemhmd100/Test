@@ -3,6 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html { background: #f3f0e8; }
+    html[data-theme="dark"] { background: #171b16; }
+  </style>
+  <script>
+    try {
+      if (localStorage.getItem("sales-manager-theme") === "dark") {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (error) {}
+  </script>
   <title>قائمة الطلبات</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -23,6 +34,7 @@
     <a href="products.html" data-permission="viewProducts">المنتجات</a>
     <a href="orders.html">إضافة طلب</a>
     <a class="active" href="order-list.html">قائمة الطلبات</a>
+    <a href="payment.html">الدفع</a>
     <a href="customers.html">العملاء والديون</a>
     <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
     <a href="users.html" data-permission="manageUsers">المستخدمين</a>
@@ -36,6 +48,10 @@
           <p>يمكن تسجيل الدفع، تعديل الطلب، التحويل، المراجعة، أو الحذف من الجدول.</p>
         </div>
         <div class="row-actions">
+          <div class="filter-pills" aria-label="تصفية الطلبات">
+            <button class="filter-pill active-filter" data-order-date-filter="all" type="button">كل الطلبات</button>
+            <button class="filter-pill" data-order-date-filter="today" type="button">طلبات اليوم</button>
+          </div>
           <input id="searchOrders" class="search" placeholder="بحث عن عميل أو منتج">
           <a class="button-link" href="orders.html">طلب جديد</a>
         </div>

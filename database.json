@@ -1,0 +1,569 @@
+{
+  "appState": {
+    "orders": [
+      {
+        "id": "6f237ebe-fc8d-405c-a7e3-4730580a7291",
+        "customerName": "فادي",
+        "customerPhone": "",
+        "productId": "51107c7e-0fd4-4dbc-8b66-aabb5dcb6aa8",
+        "productName": "بلو x3 + نت x2 + شاي لتيه x2",
+        "quantity": 7,
+        "unitPrice": 0,
+        "unitCost": 0,
+        "items": [
+          {
+            "productId": "51107c7e-0fd4-4dbc-8b66-aabb5dcb6aa8",
+            "productName": "بلو",
+            "quantity": 3,
+            "unitPrice": 8,
+            "unitCost": 5
+          },
+          {
+            "productId": "76d88f04-269a-4c68-b443-25d6bbdbfdb8",
+            "productName": "نت",
+            "quantity": 2,
+            "unitPrice": 1,
+            "unitCost": 0.87719
+          },
+          {
+            "productId": "5eb15b6d-2f3c-4035-b944-022560a1231a",
+            "productName": "شاي لتيه",
+            "quantity": 2,
+            "unitPrice": 7,
+            "unitCost": 5
+          }
+        ],
+        "discountAmount": 0,
+        "paidAmount": 0,
+        "status": "ready",
+        "orderDate": "2026-05-15",
+        "reviewed": false,
+        "notes": "",
+        "createdAt": "2026-05-15T18:21:25.800Z"
+      }
+    ],
+    "products": [
+      {
+        "id": "51107c7e-0fd4-4dbc-8b66-aabb5dcb6aa8",
+        "name": "بلو",
+        "unitCost": 5,
+        "createdAt": "2026-05-15T11:28:45.546Z",
+        "unitPrice": 8
+      },
+      {
+        "id": "5eb15b6d-2f3c-4035-b944-022560a1231a",
+        "name": "شاي لتيه",
+        "unitCost": 5,
+        "createdAt": "2026-05-15T11:28:27.514Z",
+        "unitPrice": 7
+      },
+      {
+        "id": "001f19ae-4692-42b5-9017-c6d3780f7fc2",
+        "name": "خدمة شيشة",
+        "unitCost": 10,
+        "createdAt": "2026-05-15T11:28:09.034Z",
+        "unitPrice": 20
+      },
+      {
+        "id": "e2dc2197-2b0d-4698-9c4f-af9b5aca59d4",
+        "name": "قهوة",
+        "unitCost": 5,
+        "createdAt": "2026-05-15T11:28:01.666Z",
+        "unitPrice": 8
+      },
+      {
+        "id": "76d88f04-269a-4c68-b443-25d6bbdbfdb8",
+        "name": "نت",
+        "unitCost": 0.87719,
+        "createdAt": "2026-05-15T11:27:53.666Z",
+        "unitPrice": 1
+      },
+      {
+        "id": "6a85ce2f-22e4-42d7-ad37-54f47f1db64b",
+        "name": "كولا",
+        "unitCost": 5,
+        "createdAt": "2026-05-15T11:17:05.483Z",
+        "unitPrice": 8
+      },
+      {
+        "id": "6aa08d3e-7c3f-4075-b6e8-bd7efa834fe1",
+        "name": "شاي",
+        "unitCost": 3,
+        "createdAt": "2026-05-14T12:59:13.557Z",
+        "unitPrice": 5
+      }
+    ],
+    "purchases": [],
+    "customerTransactions": [
+      {
+        "id": "7411d041-a4b9-4dfb-b238-5a59037f6c96",
+        "note": "",
+        "amount": 23,
+        "method": "بنك",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "برغوث",
+        "customerName": "برغوث",
+        "customerPhone": ""
+      },
+      {
+        "id": "aa76d387-2017-4637-8ea8-e43e04bf5fca",
+        "note": "",
+        "amount": 39,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T12:32:43.769Z",
+        "customerKey": "ابو صبحي",
+        "customerName": "ابو صبحي",
+        "customerPhone": ""
+      },
+      {
+        "id": "3af24ade-3f1c-4df1-b744-70eb366c95d3",
+        "note": "",
+        "amount": 32,
+        "method": "دفعة",
+        "direction": "in",
+        "movementAt": "2026-05-15T12:32:29.737Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "167bc0d9-00ce-456c-a2f2-e8b58b5da44e",
+        "note": "",
+        "amount": 11,
+        "method": "بنك",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "52b52eb3-6e7b-4fec-8d0d-f37ecfff3db7",
+        "note": "",
+        "amount": 35,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "2e64bc1d-912d-4836-a63c-c6a1bec74932",
+        "note": "",
+        "amount": 20,
+        "method": "محفظة جوال",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "cd43fb38-bb73-4c67-9078-9a4cc84cec71",
+        "note": "",
+        "amount": 20,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "32a9ffe6-e729-427d-831e-7a0f7b26f040",
+        "note": "",
+        "amount": 13,
+        "method": "محفظة بال بي",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "5f01e8e1-c21d-49eb-80c7-ff8ff38b2ade",
+        "note": "",
+        "amount": 31,
+        "method": "بنك",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "8b28d1dd-4875-4f05-abbd-250cff51106d",
+        "note": "",
+        "amount": 19,
+        "method": "محفظة بال بي",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "5a504973-64ee-49c3-b3e7-d017c2735a97",
+        "note": "",
+        "amount": 80,
+        "method": "دفعة",
+        "direction": "in",
+        "movementAt": "2026-05-15T12:26:15.023Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "40f244c1-5b11-4368-a997-e2073ef0392f",
+        "note": "",
+        "amount": 9,
+        "method": "محفظة جوال",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "94069a57-e57e-447e-9774-6bff4fd0dbe8",
+        "note": "",
+        "amount": 16,
+        "method": "بنك",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "0592029010",
+        "customerName": "فادي",
+        "customerPhone": "0592029010"
+      },
+      {
+        "id": "f691ccd6-c713-4c87-a772-974c8a4d522f",
+        "note": "",
+        "amount": 80,
+        "method": "محفظة بال بي",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمد سفيان",
+        "customerName": "محمد سفيان",
+        "customerPhone": ""
+      },
+      {
+        "id": "2a5dfd6c-0382-4194-8927-668cc1f6e3e2",
+        "note": "",
+        "amount": 8,
+        "method": "بنك",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمد الطلاع",
+        "customerName": "محمد الطلاع",
+        "customerPhone": ""
+      },
+      {
+        "id": "c9306d6a-25a6-437e-8a42-a601641ae678",
+        "note": "",
+        "amount": 8,
+        "method": "بنك",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمد سفيان",
+        "customerName": "محمد سفيان",
+        "customerPhone": ""
+      },
+      {
+        "id": "aabe32fe-0f2c-430d-a136-742e1dac4653",
+        "note": "",
+        "amount": 16,
+        "method": "بنك",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "برغوث",
+        "customerName": "برغوث",
+        "customerPhone": ""
+      },
+      {
+        "id": "b0044b71-d64d-441a-9472-786a3edb16d0",
+        "note": "",
+        "amount": 23,
+        "method": "محفظة جوال",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمد سفيان",
+        "customerName": "محمد سفيان",
+        "customerPhone": ""
+      },
+      {
+        "id": "98b247d4-b53f-4d1c-b992-98169cea06d0",
+        "note": "",
+        "amount": 8,
+        "method": "محفظة جوال",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "صالح",
+        "customerName": "صالح",
+        "customerPhone": ""
+      },
+      {
+        "id": "506f2cca-f768-46f9-b016-a7dbaa152b19",
+        "note": "",
+        "amount": 43,
+        "method": "دفعة",
+        "direction": "in",
+        "movementAt": "2026-05-15T12:02:23.904Z",
+        "customerKey": "محمد الطلاع",
+        "customerName": "محمد الطلاع",
+        "customerPhone": ""
+      },
+      {
+        "id": "c0e800ca-aefd-4975-bf9c-485e0af7c2d9",
+        "note": "",
+        "amount": 3,
+        "method": "دفعة",
+        "direction": "in",
+        "movementAt": "2026-05-15T12:02:13.968Z",
+        "customerKey": "برغوث",
+        "customerName": "برغوث",
+        "customerPhone": ""
+      },
+      {
+        "id": "8052ec04-611c-4187-bf97-eb7b1aec0633",
+        "note": "",
+        "amount": 37,
+        "method": "دفعة",
+        "direction": "in",
+        "movementAt": "2026-05-15T12:01:22.160Z",
+        "customerKey": "محمد الطلاع",
+        "customerName": "محمد الطلاع",
+        "customerPhone": ""
+      },
+      {
+        "id": "9ce69a7a-9639-4163-ae8b-e5e975996f7f",
+        "note": "",
+        "amount": 5,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "برغوث",
+        "customerName": "برغوث",
+        "customerPhone": ""
+      },
+      {
+        "id": "80d7e589-2604-4d03-9611-7efcf143d95d",
+        "note": "",
+        "amount": 8,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمد سفيان",
+        "customerName": "محمد سفيان",
+        "customerPhone": ""
+      },
+      {
+        "id": "839e384e-4464-45d1-9db5-8a227df03445",
+        "note": "",
+        "amount": 50,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "صالح",
+        "customerName": "صالح",
+        "customerPhone": ""
+      },
+      {
+        "id": "c10a5f92-4fc9-412d-b7dd-2aefbcea8d6a",
+        "note": "",
+        "amount": 30,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمود حمد",
+        "customerName": "محمود حمد",
+        "customerPhone": ""
+      },
+      {
+        "id": "1da2649c-dfd7-4ec1-9af8-2ab3ff2538f8",
+        "note": "",
+        "amount": 28,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "صلاح",
+        "customerName": "صلاح",
+        "customerPhone": ""
+      },
+      {
+        "id": "afd4ee2b-4f15-47b7-af4c-533fc4801167",
+        "note": "",
+        "amount": 20,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمد سفيان",
+        "customerName": "محمد سفيان",
+        "customerPhone": ""
+      },
+      {
+        "id": "06df3e60-9451-4398-80d3-c5ad9a373f71",
+        "note": "",
+        "amount": 20,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "ابو صبحي",
+        "customerName": "ابو صبحي",
+        "customerPhone": ""
+      },
+      {
+        "id": "923022d1-a7b3-453f-a90c-85b11757920b",
+        "note": "",
+        "amount": 10,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "صالح",
+        "customerName": "صالح",
+        "customerPhone": ""
+      },
+      {
+        "id": "5571d91b-ce8b-4674-9861-eb2d6845d0e1",
+        "note": "",
+        "amount": 16,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمد سفيان",
+        "customerName": "محمد سفيان",
+        "customerPhone": ""
+      },
+      {
+        "id": "1d750d42-4342-4307-a2ba-e38ff4583809",
+        "note": "",
+        "amount": 25,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "محمد الطلاع",
+        "customerName": "محمد الطلاع",
+        "customerPhone": ""
+      },
+      {
+        "id": "84346571-d782-439f-814e-da22aa4dcad5",
+        "note": "",
+        "amount": 26,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "صالح",
+        "customerName": "صالح",
+        "customerPhone": ""
+      },
+      {
+        "id": "5a3f8234-269b-4ca4-b794-75d793a068bc",
+        "note": "",
+        "amount": 8,
+        "method": "محفظة بال بي",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "صالح",
+        "customerName": "صالح",
+        "customerPhone": ""
+      },
+      {
+        "id": "270b6856-5cb1-4d57-bc1d-77fbe1739811",
+        "note": "",
+        "amount": 15,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "برغوث",
+        "customerName": "برغوث",
+        "customerPhone": ""
+      },
+      {
+        "id": "8571cae5-76d1-400f-93f8-e9ef1cc10d0d",
+        "note": "",
+        "amount": 15,
+        "method": "كاش",
+        "direction": "in",
+        "movementAt": "2026-05-15T00:00:00.000Z",
+        "customerKey": "صالح",
+        "customerName": "صالح",
+        "customerPhone": ""
+      }
+    ],
+    "customerDebts": []
+  },
+  "appStateUpdatedAt": "2026-05-15T18:21:25.800Z",
+  "users": [
+    {
+      "role": "admin",
+      "password": "1234",
+      "username": "admin",
+      "createdAt": "2026-05-14T12:51:55.474Z",
+      "displayName": "المدير",
+      "permissions": {
+        "exportCsv": true,
+        "resetData": true,
+        "viewProfit": true,
+        "manageUsers": true,
+        "deleteOrders": true,
+        "viewProducts": true,
+        "viewPurchases": true,
+        "deleteProducts": true,
+        "viewDebtTotals": true,
+        "deleteCustomers": true,
+        "deletePurchases": true,
+        "viewSalesTotals": true,
+        "viewQuickActions": true
+      }
+    },
+    {
+      "role": "user",
+      "email": "hazemhmd100@gmail.com",
+      "password": "12345",
+      "username": "hazemhmd100@gmail.com",
+      "createdAt": "2026-05-14T13:05:03.562Z",
+      "displayName": "hazemhmd /حازم حمد",
+      "permissions": {
+        "exportCsv": true,
+        "resetData": false,
+        "viewProfit": false,
+        "manageUsers": false,
+        "deleteOrders": false,
+        "viewProducts": false,
+        "viewPurchases": false,
+        "deleteProducts": false,
+        "viewDebtTotals": false,
+        "deleteCustomers": false,
+        "deletePurchases": false,
+        "viewSalesTotals": false,
+        "viewQuickActions": false
+      }
+    },
+    {
+      "role": "admin",
+      "email": "hazemhmd1010@gmail.com",
+      "password": "102030",
+      "username": "hazemhmd1010@gmail.com",
+      "createdAt": "2026-05-14T13:58:02.799Z",
+      "displayName": "hazemhmd /حازم حمد",
+      "permissions": {
+        "exportCsv": true,
+        "resetData": true,
+        "viewProfit": true,
+        "manageUsers": true,
+        "deleteOrders": true,
+        "viewProducts": true,
+        "viewPurchases": true,
+        "deleteProducts": true,
+        "viewDebtTotals": true,
+        "deleteCustomers": true,
+        "deletePurchases": true,
+        "viewSalesTotals": true,
+        "viewQuickActions": true
+      }
+    }
+  ],
+  "usersUpdatedAt": "2026-05-14T13:58:02.799+00:00"
+}

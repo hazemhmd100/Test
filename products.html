@@ -3,6 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html { background: #f3f0e8; }
+    html[data-theme="dark"] { background: #171b16; }
+  </style>
+  <script>
+    try {
+      if (localStorage.getItem("sales-manager-theme") === "dark") {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (error) {}
+  </script>
   <title>المنتجات</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -23,6 +34,7 @@
     <a class="active" href="products.html" data-permission="viewProducts">المنتجات</a>
     <a href="orders.html">إضافة طلب</a>
     <a href="order-list.html">قائمة الطلبات</a>
+    <a href="payment.html">الدفع</a>
     <a href="customers.html">العملاء والديون</a>
     <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
     <a href="users.html" data-permission="manageUsers">المستخدمين</a>
@@ -64,11 +76,11 @@
         </label>
         <label>
           سعر البيع
-          <input id="newProductPrice" required inputmode="decimal" value="0">
+          <input id="newProductPrice" required inputmode="decimal" placeholder="سعر البيع">
         </label>
         <label>
           تكلفة المنتج
-          <input id="newProductCost" required inputmode="decimal" value="0">
+          <input id="newProductCost" required inputmode="decimal" placeholder="التكلفة">
         </label>
         <button class="primary" type="submit">إضافة المنتج</button>
       </form>

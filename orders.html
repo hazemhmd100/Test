@@ -3,6 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html { background: #f3f0e8; }
+    html[data-theme="dark"] { background: #171b16; }
+  </style>
+  <script>
+    try {
+      if (localStorage.getItem("sales-manager-theme") === "dark") {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (error) {}
+  </script>
   <title>إضافة طلب</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -23,6 +34,7 @@
     <a href="products.html" data-permission="viewProducts">المنتجات</a>
     <a class="active" href="orders.html">إضافة طلب</a>
     <a href="order-list.html">قائمة الطلبات</a>
+    <a href="payment.html">الدفع</a>
     <a href="customers.html">العملاء والديون</a>
     <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
     <a href="users.html" data-permission="manageUsers">المستخدمين</a>
@@ -61,11 +73,11 @@
             </label>
             <label>
               دفعة مقدمة
-              <input id="paidAmount" inputmode="decimal" value="0">
+              <input id="paidAmount" inputmode="decimal" placeholder="اختياري">
             </label>
             <label>
               الخصم
-              <input id="discountAmount" inputmode="decimal" value="0">
+              <input id="discountAmount" inputmode="decimal" placeholder="اختياري">
             </label>
           </div>
         </div>
@@ -90,11 +102,11 @@
                 </label>
                 <label>
                   سعر البيع
-                  <input id="externalProductPrice" inputmode="decimal" value="0">
+                  <input id="externalProductPrice" inputmode="decimal" placeholder="سعر البيع">
                 </label>
                 <label>
                   التكلفة
-                  <input id="externalProductCost" inputmode="decimal" value="0">
+                  <input id="externalProductCost" inputmode="decimal" placeholder="التكلفة">
                 </label>
                 <label>
                   الكمية

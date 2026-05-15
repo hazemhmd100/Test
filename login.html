@@ -3,7 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>تسجيل الدخول</title>
+  <style>
+    html { background: #f3f0e8; }
+    html[data-theme="dark"] { background: #171b16; }
+  </style>
+  <script>
+    try {
+      if (localStorage.getItem("sales-manager-theme") === "dark") {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (error) {}
+  </script>
+  <title>فتح النظام</title>
+  <meta http-equiv="refresh" content="0; url=index.html">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="auth-page">
@@ -11,30 +23,11 @@
     <section class="auth-card">
       <div class="auth-head">
         <p class="eyebrow">نظام المبيعات</p>
-        <h1>تسجيل الدخول</h1>
-        <p>ادخل باسم المستخدم حتى تفتح صفحات المبيعات والديون.</p>
+        <h1>جاري فتح النظام</h1>
+        <p>تمت إزالة صفحة تسجيل الدخول. إذا لم يتم التحويل تلقائياً، افتح الصفحة الرئيسية.</p>
       </div>
-
-      <div class="auth-grid auth-grid-single">
-        <form id="loginForm" class="auth-form">
-          <h2>دخول مستخدم</h2>
-          <label>
-            اسم المستخدم
-            <input id="loginUsername" required autocomplete="username" placeholder="admin">
-          </label>
-          <label>
-            كلمة المرور
-            <input id="loginPassword" required type="password" autocomplete="current-password" placeholder="1234">
-          </label>
-          <button class="primary" type="submit">دخول</button>
-          <p class="auth-hint">أول دخول: المستخدم admin وكلمة المرور 1234.</p>
-        </form>
-      </div>
-
-      <p id="authMessage" class="auth-message" role="status"></p>
+      <a class="button-link" href="index.html">فتح الصفحة الرئيسية</a>
     </section>
   </main>
-
-  <script src="login.js"></script>
 </body>
 </html>

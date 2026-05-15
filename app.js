@@ -1,6 +1,12 @@
 const STORAGE_KEY = "sales-manager-v1";
 const USERS_KEY = "sales-manager-users-v1";
 const SESSION_KEY = "sales-manager-session-v1";
+const STORAGE_UPDATED_KEY = `${STORAGE_KEY}-updated-at`;
+const USERS_UPDATED_KEY = `${USERS_KEY}-updated-at`;
+const THEME_KEY = "sales-manager-theme";
+const OPEN_CUSTOMER_DETAILS_KEY = "sales-manager-open-customer-details";
+const OPEN_CUSTOMER_ORDER_KEY = "sales-manager-open-customer-order";
+const DATABASE_ENABLED = window.location.protocol !== "file:";
 
 const PERMISSION_LABELS = {
   viewProducts: "عرض المنتجات",
@@ -35,15 +41,18 @@ const DEFAULT_USER_PERMISSIONS = {
 };
 
 ensureDefaultUsers();
-const activeUser = getActiveUser();
-if (!activeUser) redirectToLogin();
-if (activeUser) enforcePageAccess();
+const activeUser = getActiveUser() || createOpenAdminUser();
+enforcePageAccess();
 
 let state = loadState();
 let draftOrderItems = [];
 let draftPurchaseItems = [];
 let editingOrderId = "";
 let editingPurchaseInvoiceId = "";
+let orderDateFilter = "all";
+let applyingDatabaseState = false;
+let stateSaveTimer = 0;
+let usersSaveTimer = 0;
 
 const formatCurrency = new Intl.NumberFormat("ar", {
   style: "currency",
@@ -60,14 +69,18 @@ const statusLabels = {
   ready: "جاهز",
 };
 
-const transferMethods = new Set(["كاش", "بنك", "محفظة جوال", "محفظة بال بي"]);
+const paymentBreakdownMethods = ["كاش", "بنك", "محفظة جوال", "محفظة بال بي"];
+const transferMethods = new Set(paymentBreakdownMethods);
 
+applySavedTheme();
 markExistingOrdersReadyOnce();
 
 const els = {
   orderForm: document.querySelector("#orderForm"),
   productForm: document.querySelector("#productForm"),
   purchaseForm: document.querySelector("#purchaseForm"),
+  paymentForm: document.querySelector("#paymentForm"),
+  customerDetailsPage: document.querySelector("#customerDetailsPage"),
   directCustomerForm: document.querySelector("#directCustomerForm"),
   userForm: document.querySelector("#userForm"),
   ordersTable: document.querySelector("#ordersTable"),
@@ -115,6 +128,7 @@ const els = {
   cancelOrderEdit: document.querySelector("#cancelOrderEdit"),
   purchaseSubmit: document.querySelector("#purchaseSubmit"),
   cancelPurchaseEdit: document.querySelector("#cancelPurchaseEdit"),
+  paymentLastOrderTable: document.querySelector("#paymentLastOrderTable"),
 };
 
 els.orderForm?.addEventListener("submit", addOrder);
@@ -132,6 +146,8 @@ els.cancelOrderEdit?.addEventListener("click", resetOrderForm);
 els.cancelPurchaseEdit?.addEventListener("click", resetPurchaseForm);
 els.productForm?.addEventListener("submit", addProduct);
 els.purchaseForm?.addEventListener("submit", addPurchase);
+els.paymentForm?.addEventListener("submit", submitCustomerPayment);
+document.querySelector("#paymentDiscount")?.addEventListener("input", syncPaymentAmountAfterDiscount);
 els.directCustomerForm?.addEventListener("submit", addDirectCustomer);
 els.userForm?.addEventListener("submit", addUser);
 els.directCustomerName?.addEventListener("input", syncDirectCustomerFromName);
@@ -147,17 +163,31 @@ els.purchasesTable?.addEventListener("click", handlePurchaseClick);
 els.usersTable?.addEventListener("click", handleUserClick);
 els.usersTable?.addEventListener("change", handleUserPermissionChange);
 els.searchOrders?.addEventListener("input", render);
+document.querySelectorAll("[data-order-date-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    orderDateFilter = button.dataset.orderDateFilter || "all";
+    render();
+  });
+});
 els.searchCustomers?.addEventListener("input", render);
 els.resetData?.addEventListener("click", resetData);
 els.exportCsv?.addEventListener("click", exportCsv);
+setupPaidBreakdownToggle();
 
 if (activeUser) {
   renderAuthHeader();
+  setupThemeToggle();
+  setupBackupControls();
   render();
   setDefaultOrderDate();
   setDefaultPurchaseDate();
   setDefaultDirectCustomerDate();
   loadPendingOrderEdit();
+  syncStateFromDatabase();
+  syncUsersFromDatabase().then(() => {
+    if (els.usersTable) renderUsers();
+  });
+  renderPaymentPage();
 }
 
 function addOrder(event) {
@@ -225,8 +255,8 @@ function resetOrderForm() {
   renderDraftOrderItems();
   if (els.productQuickList) renderProductQuickList();
   setDefaultOrderDate();
-  setInput("#paidAmount", 0);
-  setInput("#discountAmount", 0);
+  setInput("#paidAmount", "");
+  setInput("#discountAmount", "");
   setChecked("#reviewed", false);
   if (els.orderSubmit) els.orderSubmit.textContent = "حفظ الطلب";
   if (els.cancelOrderEdit) els.cancelOrderEdit.hidden = true;
@@ -255,11 +285,15 @@ function addProductToCart(product, quantity = 1) {
 
 function renderAuthHeader() {
   const actions = document.querySelector(".header-actions");
-  if (!actions || actions.querySelector("#logoutButton")) return;
+  if (!actions || actions.querySelector(".user-pill")) return;
 
   const userPill = document.createElement("span");
   userPill.className = "user-pill";
   userPill.textContent = activeUser.displayName || activeUser.username;
+
+  actions.prepend(userPill);
+
+  if (activeUser.openAccess) return;
 
   const logoutButton = document.createElement("button");
   logoutButton.id = "logoutButton";
@@ -267,8 +301,78 @@ function renderAuthHeader() {
   logoutButton.textContent = "خروج";
   logoutButton.addEventListener("click", logout);
 
-  actions.prepend(userPill);
   actions.append(logoutButton);
+}
+
+function applySavedTheme() {
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  setTheme(savedTheme === "dark", { persist: false });
+}
+
+function setupThemeToggle() {
+  const actions = document.querySelector(".header-actions");
+  if (!actions || actions.querySelector("#themeToggle")) return;
+
+  const themeButton = document.createElement("button");
+  themeButton.id = "themeToggle";
+  themeButton.type = "button";
+  themeButton.className = "theme-toggle";
+  themeButton.addEventListener("click", () => {
+    setTheme(!isDarkTheme());
+  });
+
+  actions.prepend(themeButton);
+  updateThemeToggle();
+}
+
+function setTheme(isDark, options = {}) {
+  document.documentElement.dataset.theme = isDark ? "dark" : "light";
+  if (options.persist !== false) {
+    localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+  }
+  updateThemeToggle();
+}
+
+function isDarkTheme() {
+  return document.documentElement.dataset.theme === "dark";
+}
+
+function updateThemeToggle() {
+  const button = document.querySelector("#themeToggle");
+  if (!button) return;
+
+  const isDark = isDarkTheme();
+  button.textContent = isDark ? "نهاري" : "ليلي";
+  button.setAttribute("aria-pressed", isDark ? "true" : "false");
+  button.title = isDark ? "تفعيل الوضع النهاري" : "تفعيل الوضع الليلي";
+}
+
+function setupBackupControls() {
+  const actions = document.querySelector(".header-actions");
+  if (!actions || actions.querySelector("#exportBackup")) return;
+
+  const exportButton = document.createElement("button");
+  exportButton.id = "exportBackup";
+  exportButton.type = "button";
+  exportButton.dataset.permission = "exportCsv";
+  exportButton.textContent = "تصدير نسخة";
+  exportButton.addEventListener("click", exportBackupData);
+
+  const importButton = document.createElement("button");
+  importButton.id = "importBackup";
+  importButton.type = "button";
+  importButton.dataset.permission = "resetData";
+  importButton.textContent = "استرداد نسخة";
+  importButton.addEventListener("click", () => document.querySelector("#backupFileInput")?.click());
+
+  const fileInput = document.createElement("input");
+  fileInput.id = "backupFileInput";
+  fileInput.type = "file";
+  fileInput.accept = "application/json,.json";
+  fileInput.hidden = true;
+  fileInput.addEventListener("change", importBackupData);
+
+  actions.append(exportButton, importButton, fileInput);
 }
 
 function applyPermissionUi() {
@@ -311,7 +415,7 @@ function enforcePageAccess() {
 
 function logout() {
   sessionStorage.removeItem(SESSION_KEY);
-  window.location.href = "login.html";
+  window.location.href = "index.html";
 }
 
 function addExternalProductToCart() {
@@ -338,8 +442,8 @@ function addExternalProductToCart() {
 
 function resetExternalProductInputs() {
   setInput("#externalProductName", "");
-  setInput("#externalProductPrice", 0);
-  setInput("#externalProductCost", 0);
+  setInput("#externalProductPrice", "");
+  setInput("#externalProductCost", "");
   setInput("#externalProductQty", 1);
   els.externalProductName?.focus();
 }
@@ -363,8 +467,8 @@ function addProduct(event) {
 
   saveState();
   els.productForm.reset();
-  setInput("#newProductPrice", 0);
-  setInput("#newProductCost", 0);
+  setInput("#newProductPrice", "");
+  setInput("#newProductCost", "");
   render();
 }
 
@@ -436,7 +540,7 @@ function addDirectCustomer(event) {
 
   saveState();
   els.directCustomerForm.reset();
-  setInput("#directCustomerDebt", 0);
+  setInput("#directCustomerDebt", "");
   setDefaultDirectCustomerDate();
   render();
 }
@@ -513,7 +617,7 @@ function resetPurchaseLine() {
   setInput("#purchaseProductId", "");
   setInput("#purchaseQty", 1);
   setInput("#purchaseUnit", "");
-  setInput("#purchaseCost", 0);
+  setInput("#purchaseCost", "");
   updatePurchaseDraftTotal();
   document.querySelector("#purchaseItem")?.focus();
 }
@@ -528,7 +632,7 @@ function resetPurchaseForm() {
   setInput("#purchaseProductId", "");
   setInput("#purchaseQty", 1);
   setInput("#purchaseUnit", "");
-  setInput("#purchaseCost", 0);
+  setInput("#purchaseCost", "");
   if (els.purchaseSubmit) els.purchaseSubmit.textContent = "حفظ المشتريات";
   if (els.cancelPurchaseEdit) els.cancelPurchaseEdit.hidden = true;
   updatePurchaseDraftTotal();
@@ -541,6 +645,12 @@ function clearPurchaseDraft() {
 }
 
 function handleOrderClick(event) {
+  const customerButton = event.target.closest("button[data-action='open-customer-orders']");
+  if (customerButton) {
+    openCustomerOrders(customerButton.closest("tr").dataset.id);
+    return;
+  }
+
   const editButton = event.target.closest("button[data-action='edit']");
   if (editButton) {
     startOrderEdit(editButton.closest("tr").dataset.id);
@@ -563,6 +673,13 @@ function handleOrderClick(event) {
   render();
 }
 
+function openCustomerOrders(orderId) {
+  const order = state.orders.find((item) => item.id === orderId);
+  if (!order) return;
+
+  window.location.href = `payment.html?order=${encodeURIComponent(order.id)}`;
+}
+
 function startOrderEdit(id) {
   const order = state.orders.find((item) => item.id === id);
   if (!order) return;
@@ -577,8 +694,8 @@ function startOrderEdit(id) {
   els.customerName.value = order.customerName || "";
   els.customerPhone.value = order.customerPhone || "";
   setInput("#orderDate", orderDate(order) || todayDate());
-  setInput("#paidAmount", Number(order.paidAmount) || 0);
-  setInput("#discountAmount", orderDiscount(order));
+  setInput("#paidAmount", inputNumberValue(order.paidAmount));
+  setInput("#discountAmount", inputNumberValue(orderDiscount(order)));
   setChecked("#reviewed", Boolean(order.reviewed));
   setInput("#notes", order.notes || "");
   draftOrderItems = orderItems(order).map((item) => ({ ...item }));
@@ -762,6 +879,35 @@ function handleCustomerClick(event) {
   button.textContent = isHidden ? "إخفاء الطلبات" : "عرض الطلبات";
 }
 
+function openPendingCustomerDetails() {
+  if (!els.customersTable) return;
+
+  const key = sessionStorage.getItem(OPEN_CUSTOMER_DETAILS_KEY);
+  const orderId = sessionStorage.getItem(OPEN_CUSTOMER_ORDER_KEY);
+  if (!key) return;
+
+  const detailsRow = els.customersTable.querySelector(`tr[data-customer-details-for="${CSS.escape(key)}"]`);
+  const customerRow = els.customersTable.querySelector(`tr[data-customer-key="${CSS.escape(key)}"]`);
+  if (!detailsRow || !customerRow) return;
+
+  detailsRow.hidden = false;
+  customerRow.querySelector("button[data-action='toggle-customer-orders']").textContent = "إخفاء الطلبات";
+  sessionStorage.removeItem(OPEN_CUSTOMER_DETAILS_KEY);
+  sessionStorage.removeItem(OPEN_CUSTOMER_ORDER_KEY);
+
+  const orderRow = orderId
+    ? detailsRow.querySelector(`tr[data-customer-order-id="${CSS.escape(orderId)}"]`)
+    : null;
+
+  if (orderRow) {
+    orderRow.classList.add("highlight-row");
+    orderRow.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  customerRow.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function registerCustomerPayment(customerKey) {
   const customer = getCustomers().find((item) => item.key === customerKey);
   if (!customer) {
@@ -785,6 +931,229 @@ function registerCustomerPayment(customerKey) {
   addCustomerTransaction(customer, "in", amount, movement);
   saveState();
   render();
+}
+
+function renderPaymentPage() {
+  if (!els.paymentForm) return;
+
+  const order = selectedPaymentOrder();
+  if (!order) {
+    setDefaultPaymentDate();
+    return;
+  }
+
+  const customerKey = customerKeyFor(order);
+  const customer = getCustomers().find((item) => item.key === customerKey);
+  const currentCustomer = customer || {
+    name: order.customerName,
+    phone: order.customerPhone,
+    debt: orderDebt(order),
+    credit: orderCredit(order),
+  };
+
+  setText("#paymentCustomerName", currentCustomer.name || "-");
+  setText("#paymentCustomerDebt", money(currentCustomer.debt || 0));
+  setText("#paymentCustomerCredit", money(currentCustomer.credit || 0));
+  setText("#paymentLastOrderDate", formatDate(orderDate(order)));
+  setText("#paymentCustomerInfo", `${currentCustomer.name || "-"}${currentCustomer.phone ? ` - ${currentCustomer.phone}` : ""}`);
+  setInput("#paymentCustomerEditName", currentCustomer.name || "");
+  setInput("#paymentCustomerEditPhone", currentCustomer.phone || "");
+  const selectedOrderDebt = orderDebt(order);
+  setInput("#paymentAmount", inputNumberValue(selectedOrderDebt));
+  setInput("#paymentDiscount", "");
+  setInput("#paymentMethod", orderTransferTo(order) || "كاش");
+  const paymentAmountInput = document.querySelector("#paymentAmount");
+  if (paymentAmountInput) paymentAmountInput.dataset.baseAmount = String(selectedOrderDebt);
+  setDefaultPaymentDate();
+
+  const editLink = document.querySelector("#paymentEditOrder");
+  if (editLink) {
+    editLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      startOrderEdit(order.id);
+    }, { once: true });
+  }
+
+  renderPaymentLastOrder(order);
+}
+
+function syncPaymentAmountAfterDiscount() {
+  const amountInput = document.querySelector("#paymentAmount");
+  const discountInput = document.querySelector("#paymentDiscount");
+  if (!amountInput || !discountInput) return;
+
+  const baseAmount = Number(amountInput.dataset.baseAmount);
+  if (!Number.isFinite(baseAmount)) return;
+
+  const discount = Math.max(0, readNumber("#paymentDiscount"));
+  const amountAfterDiscount = Math.max(0, baseAmount - discount);
+  amountInput.value = amountAfterDiscount > 0 ? inputNumberValue(amountAfterDiscount) : "";
+}
+
+function renderPaymentLastOrder(order) {
+  if (!els.paymentLastOrderTable) return;
+
+  els.paymentLastOrderTable.innerHTML = "";
+  document.querySelector("#paymentEmpty")?.classList.toggle("show", !order);
+  if (!order) return;
+
+  const row = document.createElement("tr");
+  row.className = "highlight-row";
+  row.innerHTML = `
+    <td>${formatDate(orderDate(order))}</td>
+    <td>${orderProductPriceCell(order)}</td>
+    <td>${money(orderTotal(order))}</td>
+    <td>${money(orderDiscount(order))}</td>
+    <td>${money(order.paidAmount)}</td>
+    <td>${money(orderDebt(order))}</td>
+    <td>${money(orderCredit(order))}</td>
+    <td>${escapeHtml(orderTransferLabel(order))}</td>
+    <td>${escapeHtml(orderReviewLabel(order))}</td>
+  `;
+  els.paymentLastOrderTable.append(row);
+}
+
+async function submitCustomerPayment(event) {
+  event.preventDefault();
+
+  const order = selectedPaymentOrder();
+  if (!order) {
+    alert("افتح صفحة الدفع من قائمة الطلبات أولاً.");
+    return;
+  }
+
+  const customerKey = customerKeyFor(order);
+  const customer = getCustomers().find((item) => item.key === customerKey);
+  if (!customer) return;
+
+  const editedName = readText("#paymentCustomerEditName") || customer.name || order.customerName;
+  const editedPhone = readText("#paymentCustomerEditPhone");
+  const identityChanged = editedName !== customer.name || editedPhone !== (customer.phone || "");
+  const amount = Math.max(0, readNumber("#paymentAmount"));
+  const discount = Math.max(0, readNumber("#paymentDiscount"));
+  const paymentMethod = normalizeTransferTo(readText("#paymentMethod")) || "كاش";
+
+  const appliedDiscount = Math.min(discount, orderDebt(order));
+  if (!editedName) {
+    alert("اكتب اسم العميل.");
+    return;
+  }
+
+  if (amount <= 0 && appliedDiscount <= 0 && !identityChanged) {
+    alert("اكتب مبلغ دفعة أو خصم أكبر من صفر، أو عدل اسم العميل/الجوال.");
+    return;
+  }
+
+  if (identityChanged) {
+    updateCustomerIdentity(customerKey, editedName, editedPhone);
+  }
+
+  const updatedCustomerKey = customerKeyForValues(editedName, editedPhone);
+  const updatedCustomer = {
+    key: updatedCustomerKey,
+    name: editedName,
+    phone: editedPhone,
+  };
+
+  const movement = {
+    method: paymentMethod,
+    note: readText("#paymentNote"),
+    movementAt: `${readText("#paymentDate") || todayDate()}T00:00:00.000Z`,
+  };
+
+  if (appliedDiscount > 0) {
+    order.discountAmount = orderDiscount(order) + appliedDiscount;
+    order.discounts = Array.isArray(order.discounts) ? order.discounts : [];
+    order.discounts.push({
+      amount: appliedDiscount,
+      appliedAt: movement.movementAt,
+      method: movement.method,
+      note: movement.note,
+    });
+  }
+
+  if (amount > 0) {
+    order.paidAmount = (Number(order.paidAmount) || 0) + amount;
+    order.payments = Array.isArray(order.payments) ? order.payments : [];
+    order.payments.push({
+      amount,
+      paidAt: movement.movementAt,
+      source: "customer-payment",
+      method: movement.method,
+      note: movement.note,
+    });
+    addCustomerTransaction(updatedCustomer, "in", amount, movement);
+  }
+
+  order.transferTo = paymentMethod;
+  order.updatedAt = new Date().toISOString();
+
+  saveState();
+  render();
+  renderPaymentPage();
+  alert("تم حفظ الدفعة.");
+}
+
+function selectedPaymentOrder() {
+  const id = new URLSearchParams(window.location.search).get("order");
+  return state.orders.find((order) => order.id === id) || null;
+}
+
+function latestCustomerOrder(customerKey) {
+  return state.orders
+    .filter((order) => customerKeyFor(order) === customerKey)
+    .sort(compareOrdersNewestFirst)[0] || null;
+}
+
+function updateCustomerIdentity(oldCustomerKey, name, phone) {
+  const newCustomerKey = customerKeyForValues(name, phone);
+
+  for (const order of state.orders) {
+    if (customerKeyFor(order) !== oldCustomerKey) continue;
+    order.customerName = name;
+    order.customerPhone = phone;
+    order.updatedAt = new Date().toISOString();
+  }
+
+  for (const debt of customerDebts()) {
+    if (customerKeyForDebt(debt) !== oldCustomerKey) continue;
+    debt.customerName = name;
+    debt.customerPhone = phone;
+    debt.updatedAt = new Date().toISOString();
+  }
+
+  for (const transaction of customerTransactions()) {
+    if (customerTransactionKey(transaction) !== oldCustomerKey) continue;
+    transaction.customerKey = newCustomerKey;
+    transaction.customerName = name;
+    transaction.customerPhone = phone;
+  }
+}
+
+function applyCustomerDiscount(customerKey, amount, details = {}) {
+  let remaining = amount;
+  const orders = state.orders
+    .filter((order) => customerKeyFor(order) === customerKey && orderDebt(order) > 0)
+    .sort(compareOrdersNewestFirst);
+
+  for (const order of orders) {
+    if (remaining <= 0) break;
+    const applied = Math.min(remaining, orderDebt(order));
+    order.discountAmount = orderDiscount(order) + applied;
+    order.discounts = Array.isArray(order.discounts) ? order.discounts : [];
+    order.discounts.push({
+      amount: applied,
+      appliedAt: details.movementAt || new Date().toISOString(),
+      method: details.method || "",
+      note: details.note || "",
+    });
+    remaining -= applied;
+  }
+}
+
+function setDefaultPaymentDate() {
+  const input = document.querySelector("#paymentDate");
+  if (input && !input.value) input.value = todayDate();
 }
 
 function deleteCustomer(customerKey) {
@@ -1109,12 +1478,105 @@ function startPurchaseEdit(invoiceId) {
   setInput("#purchaseDate", invoice.date || todayDate());
   setInput("#purchaseQty", 1);
   setInput("#purchaseUnit", "");
-  setInput("#purchaseCost", 0);
+  setInput("#purchaseCost", "");
   if (els.purchaseSubmit) els.purchaseSubmit.textContent = "حفظ التعديل";
   if (els.cancelPurchaseEdit) els.cancelPurchaseEdit.hidden = false;
   updatePurchaseDraftTotal();
   renderDraftPurchaseItems();
   els.purchaseForm.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setupPaidBreakdownToggle() {
+  const metric = document.querySelector("#totalPaid")?.closest(".metric");
+  if (!metric) return;
+
+  metric.classList.add("metric-clickable");
+  metric.tabIndex = 0;
+  metric.setAttribute("role", "button");
+  metric.setAttribute("aria-expanded", "false");
+  metric.addEventListener("click", togglePaidBreakdown);
+  metric.addEventListener("keydown", (event) => {
+    if (!["Enter", " "].includes(event.key)) return;
+    event.preventDefault();
+    togglePaidBreakdown();
+  });
+}
+
+function togglePaidBreakdown() {
+  const panel = ensurePaidBreakdownPanel();
+  const metric = document.querySelector("#totalPaid")?.closest(".metric");
+  const shouldOpen = panel.hidden;
+
+  panel.hidden = !shouldOpen;
+  metric?.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+
+  if (shouldOpen) {
+    renderPaidBreakdownPanel();
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
+
+function ensurePaidBreakdownPanel() {
+  let panel = document.querySelector("#paidBreakdownPanel");
+  if (panel) return panel;
+
+  panel = document.createElement("section");
+  panel.id = "paidBreakdownPanel";
+  panel.className = "panel paid-breakdown-panel";
+  panel.hidden = true;
+  panel.innerHTML = `
+    <div class="panel-head split">
+      <div>
+        <h2>تفصيل المبالغ المدفوعة</h2>
+        <p>تقسيم المدفوعات حسب طريقة الدفع المسجلة.</p>
+      </div>
+      <button class="ghost" data-action="close-paid-breakdown" type="button">إغلاق</button>
+    </div>
+    <div id="paidBreakdownList" class="method-breakdown-grid"></div>
+  `;
+
+  panel.querySelector("[data-action='close-paid-breakdown']")?.addEventListener("click", () => {
+    panel.hidden = true;
+    document.querySelector("#totalPaid")?.closest(".metric")?.setAttribute("aria-expanded", "false");
+  });
+
+  const summary = document.querySelector(".summary-grid");
+  summary?.insertAdjacentElement("afterend", panel);
+  return panel;
+}
+
+function renderPaidBreakdownIfOpen() {
+  const panel = document.querySelector("#paidBreakdownPanel");
+  if (panel && !panel.hidden) renderPaidBreakdownPanel();
+}
+
+function renderPaidBreakdownPanel() {
+  const panel = ensurePaidBreakdownPanel();
+  const list = panel.querySelector("#paidBreakdownList");
+  if (!list) return;
+
+  const breakdown = calculatePaidBreakdown();
+  const total = [...breakdown.values()].reduce((sum, amount) => sum + amount, 0);
+  const extraMethods = [...breakdown.keys()]
+    .filter((method) => !paymentBreakdownMethods.includes(method) && method !== "غير محدد");
+  const methods = [...paymentBreakdownMethods, ...extraMethods];
+
+  if (breakdown.get("غير محدد")) methods.push("غير محدد");
+
+  list.innerHTML = [
+    ...methods.map((method) => `
+      <article class="method-breakdown-item">
+        <span>${escapeHtml(method)}</span>
+        <strong>${money(breakdown.get(method) || 0)}</strong>
+      </article>
+    `),
+    `
+      <article class="method-breakdown-item method-breakdown-total">
+        <span>الإجمالي</span>
+        <strong>${money(total)}</strong>
+      </article>
+    `,
+  ].join("");
 }
 
 function render() {
@@ -1141,6 +1603,7 @@ function render() {
   setText("#dailyPurchases", money(daily.purchases));
   setText("#dailyProfit", money(daily.profit));
   setText("#dailyQuantity", formatNumber.format(daily.quantity));
+  renderPaidBreakdownIfOpen();
   renderActiveStatusFilter();
 
   if (els.productQuickList) renderProductQuickList();
@@ -1151,6 +1614,7 @@ function render() {
   if (els.ordersTable) renderOrders(getFilteredOrders());
   if (els.productsTable) renderProducts();
   if (els.customersTable) renderCustomers();
+  if (els.customerDetailsPage) renderCustomerDetailsPage();
   if (els.purchasesTable) renderPurchases();
   if (els.usersTable) renderUsers();
   updatePurchaseDraftTotal();
@@ -1300,13 +1764,17 @@ function renderOrders(orders) {
     const debt = orderDebt(order);
 
     row.dataset.id = order.id;
-    row.querySelector("[data-cell='customer']").innerHTML = safeCustomerCell(order);
+    row.querySelector("[data-cell='customer']").innerHTML = orderCustomerOpenCell(order);
     row.querySelector("[data-cell='date']").textContent = formatDate(orderDate(order));
     row.querySelector("[data-cell='product']").innerHTML = orderProductCell(order);
     row.querySelector("[data-cell='quantity']").textContent = formatNumber.format(orderQuantity(order));
-    row.querySelector("[data-cell='total']").textContent = money(total);
+    const totalCell = row.querySelector("[data-cell='total']");
+    totalCell.textContent = money(total);
+    totalCell.classList.toggle("total-highlight", total > 0);
     row.querySelector("[data-cell='discount']").textContent = money(orderDiscount(order));
-    row.querySelector("[data-cell='paid']").textContent = money(order.paidAmount);
+    const paidCell = row.querySelector("[data-cell='paid']");
+    paidCell.textContent = money(order.paidAmount);
+    paidCell.classList.toggle("paid-positive", (Number(order.paidAmount) || 0) > 0);
     row.querySelector("[data-cell='debt']").textContent = money(debt);
     row.querySelector("[data-cell='credit']").textContent = money(orderCredit(order));
     row.querySelector("[data-action='transfer']").value = normalizeTransferTo(order.transferTo);
@@ -1369,7 +1837,11 @@ function renderCustomers() {
     const row = document.createElement("tr");
     row.dataset.customerKey = customer.key;
     row.innerHTML = `
-      <td>${escapeHtml(customer.name)}</td>
+      <td>
+        <a class="customer-detail-link" href="customer-details.html?customer=${encodeURIComponent(customer.key)}">
+          ${escapeHtml(customer.name)}
+        </a>
+      </td>
       <td>${escapeHtml(customer.phone || "-")}</td>
       <td>${customerActivityCount(customer)}</td>
       <td>${money(customer.total)}</td>
@@ -1381,7 +1853,7 @@ function renderCustomers() {
         <button class="ghost" data-action="customer-transfer-out" type="button">تحويل له</button>
       </td>
       <td><button class="ghost edit" data-action="pay-customer" type="button">تسجيل دفعة</button></td>
-      <td><button class="ghost edit" data-action="toggle-customer-orders" type="button">عرض الطلبات</button></td>
+      <td><a class="button-link" href="customer-details.html?customer=${encodeURIComponent(customer.key)}">فتح التفاصيل</a></td>
       <td>${hasPermission("deleteCustomers") ? `<button class="ghost danger" data-action="delete-customer" type="button">حذف</button>` : ""}</td>
     `;
     els.customersTable.append(row);
@@ -1417,6 +1889,45 @@ function renderCustomers() {
       </td>
     `;
     els.customersTable.append(detailsRow);
+  }
+
+  openPendingCustomerDetails();
+}
+
+function renderCustomerDetailsPage() {
+  const key = new URLSearchParams(window.location.search).get("customer") || "";
+  const customer = getCustomers().find((item) => item.key === key);
+  const rows = document.querySelector("#customerDetailsRows");
+  const transactions = document.querySelector("#customerDetailsTransactions");
+
+  if (!customer) {
+    setText("#customerDetailsTitle", "العميل غير موجود");
+    setText("#detailCustomerName", "-");
+    setText("#detailCustomerPhone", "-");
+    setText("#detailCustomerDebt", money(0));
+    setText("#detailCustomerCredit", money(0));
+    setText("#customerDetailsInfo", "لم يتم العثور على هذا العميل.");
+    if (rows) rows.innerHTML = "";
+    if (transactions) transactions.innerHTML = `<p class="empty show">لا توجد حركات رصيد.</p>`;
+    document.querySelector("#customerDetailsEmpty")?.classList.add("show");
+    return;
+  }
+
+  const latestOrder = latestCustomerOrder(customer.key);
+  setText("#customerDetailsTitle", `تفاصيل ${customer.name}`);
+  setText("#detailCustomerName", customer.name || "-");
+  setText("#detailCustomerPhone", customer.phone || "-");
+  setText("#detailCustomerDebt", money(customer.debt));
+  setText("#detailCustomerCredit", money(customer.credit));
+  setText("#customerDetailsInfo", `${customer.count} طلبات و ${customer.debts.length} ديون مباشرة.`);
+
+  if (rows) rows.innerHTML = customerDetailRows(customer);
+  if (transactions) transactions.innerHTML = customerTransactionsTable(customer);
+  document.querySelector("#customerDetailsEmpty")?.classList.toggle("show", customer.orders.length === 0 && customer.debts.length === 0);
+
+  const paymentLink = document.querySelector("#customerDetailsPaymentLink");
+  if (paymentLink) {
+    paymentLink.href = latestOrder ? `payment.html?order=${encodeURIComponent(latestOrder.id)}` : "customers.html";
   }
 }
 
@@ -1531,6 +2042,48 @@ function calculateTotals() {
   return totals;
 }
 
+function calculatePaidBreakdown() {
+  const breakdown = new Map();
+
+  for (const method of paymentBreakdownMethods) {
+    breakdown.set(method, 0);
+  }
+
+  for (const order of state.orders) {
+    const payments = orderPayments(order);
+    const recordedPayments = payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+
+    for (const payment of payments) {
+      addPaidBreakdownAmount(breakdown, payment.method, payment.amount);
+    }
+
+    const initialPaid = (Number(order.paidAmount) || 0) - recordedPayments;
+    addPaidBreakdownAmount(breakdown, orderTransferTo(order), initialPaid);
+  }
+
+  for (const debt of customerDebts()) {
+    const payments = Array.isArray(debt.payments) ? debt.payments : [];
+    const recordedPayments = payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+
+    for (const payment of payments) {
+      addPaidBreakdownAmount(breakdown, payment.method, payment.amount);
+    }
+
+    const initialPaid = customerDebtPaid(debt) - recordedPayments;
+    addPaidBreakdownAmount(breakdown, "", initialPaid);
+  }
+
+  return breakdown;
+}
+
+function addPaidBreakdownAmount(breakdown, method, amount) {
+  const value = Number(amount) || 0;
+  if (value === 0) return;
+
+  const key = normalizeTransferTo(method) || "غير محدد";
+  breakdown.set(key, (breakdown.get(key) || 0) + value);
+}
+
 function calculateDailySummary() {
   const today = todayDate();
   const summary = {
@@ -1630,7 +2183,7 @@ function getCustomers() {
   }
 
   return Array.from(customers.values()).map((customer) => {
-    customer.orders.sort((a, b) => orderDate(b).localeCompare(orderDate(a)));
+    customer.orders.sort(compareOrdersNewestFirst);
     customer.debts.sort((a, b) => customerDebtDate(b).localeCompare(customerDebtDate(a)));
     customer.transactions = getCustomerTransactions(customer.key);
     return customer;
@@ -1706,7 +2259,7 @@ function syncPurchaseProduct() {
   if (!product) return;
 
   if (els.purchaseItem) els.purchaseItem.value = product.name;
-  if (readNumber("#purchaseCost") <= 0) setInput("#purchaseCost", product.unitCost || 0);
+  if (readNumber("#purchaseCost") <= 0) setInput("#purchaseCost", inputNumberValue(product.unitCost));
   updatePurchaseDraftTotal();
 }
 
@@ -1750,6 +2303,12 @@ function customerKeyForValues(name, phone) {
   return phoneKey(phone) || normalize(name);
 }
 
+function compareOrdersNewestFirst(a, b) {
+  const dateCompare = orderDate(b).localeCompare(orderDate(a));
+  if (dateCompare) return dateCompare;
+  return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+}
+
 function phoneKey(value) {
   return String(value || "").replace(/\s+/g, "");
 }
@@ -1759,7 +2318,7 @@ function customerOrderRow(order) {
   const debt = orderDebt(order);
 
   return `
-    <tr>
+    <tr data-customer-order-id="${escapeHtml(order.id)}">
       <td>${formatDate(orderDate(order))}</td>
       <td>${orderProductCell(order)}</td>
       <td>${money(total)}</td>
@@ -1883,8 +2442,10 @@ function customerSearchText(customer) {
 
 function getFilteredOrders() {
   const query = normalize(els.searchOrders?.value);
+  const today = todayDate();
 
   return state.orders.filter((order) => {
+    const matchesDate = orderDateFilter !== "today" || orderDate(order) === today;
     const matchesSearch = !query || [
       order.customerName,
       order.customerPhone,
@@ -1894,7 +2455,7 @@ function getFilteredOrders() {
       order.notes,
     ].some((value) => normalize(value).includes(query));
 
-    return matchesSearch;
+    return matchesDate && matchesSearch;
   });
 }
 
@@ -1907,6 +2468,10 @@ function renderActiveStatusFilter() {
 
   for (const link of document.querySelectorAll("[data-status-link]")) {
     link.classList.toggle("active-filter", link.dataset.statusLink === status);
+  }
+
+  for (const button of document.querySelectorAll("[data-order-date-filter]")) {
+    button.classList.toggle("active-filter", button.dataset.orderDateFilter === orderDateFilter);
   }
 }
 
@@ -1994,6 +2559,57 @@ function exportCsv() {
   link.download = "sales-orders.csv";
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function exportBackupData() {
+  if (!requirePermission("exportCsv")) return;
+
+  const backup = {
+    app: "sales-manager",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    state: normalizeState(state),
+    users: loadUsers().map(withUserPermissions),
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `sales-manager-backup-${todayDate()}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importBackupData(event) {
+  if (!requirePermission("resetData")) return;
+
+  const input = event.target;
+  const file = input.files?.[0];
+  input.value = "";
+  if (!file) return;
+
+  try {
+    const parsed = JSON.parse(await file.text());
+    const importedState = parsed.state ? parsed.state : parsed;
+    const nextState = normalizeState(importedState);
+    const importedUsers = Array.isArray(parsed.users) ? parsed.users.map(withUserPermissions) : null;
+    const confirmed = confirm("استرداد النسخة سيستبدل البيانات الحالية بالملف المختار. هل تريد المتابعة؟");
+    if (!confirmed) return;
+
+    state = nextState;
+    saveState();
+
+    if (importedUsers) {
+      await saveUsers(importedUsers);
+    }
+
+    render();
+    renderPaymentPage();
+    alert("تم استرداد البيانات بنجاح.");
+  } catch (error) {
+    alert("ملف الاسترداد غير صحيح. اختر ملف JSON تم تصديره من النظام.");
+  }
 }
 
 function resetData() {
@@ -2269,6 +2885,20 @@ function orderProductCell(order) {
   }).join("");
 }
 
+function orderProductPriceCell(order) {
+  return orderItems(order).map((item) => {
+    const quantity = Number(item.quantity) || 0;
+    const unitPrice = Number(item.unitPrice) || 0;
+    const total = quantity * unitPrice;
+    return `
+      <small class="priced-order-item">
+        <span>${escapeHtml(orderItemLabel(item))} x${formatNumber.format(quantity)}</span>
+        <strong>${money(unitPrice)} / ${money(total)}</strong>
+      </small>
+    `;
+  }).join("");
+}
+
 function orderTransferTo(order) {
   return normalizeTransferTo(order.transferTo);
 }
@@ -2408,6 +3038,11 @@ function setInput(selector, value) {
   if (input) input.value = value;
 }
 
+function inputNumberValue(value) {
+  const number = Number(value) || 0;
+  return number > 0 ? number : "";
+}
+
 function setChecked(selector, checked) {
   const input = document.querySelector(selector);
   if (input) input.checked = checked;
@@ -2426,11 +3061,11 @@ function ensureDefaultUsers() {
   const users = loadUsers();
   if (users.length) {
     const normalized = users.map(withUserPermissions);
-    saveUsers(normalized);
+    writeLocalUsers(normalized, localStorage.getItem(USERS_UPDATED_KEY) || new Date().toISOString());
     return;
   }
 
-  saveUsers([withUserPermissions({
+  writeLocalUsers([withUserPermissions({
     username: "admin",
     displayName: "المدير",
     password: "1234",
@@ -2449,7 +3084,14 @@ function loadUsers() {
 }
 
 function saveUsers(users) {
+  const updatedAt = new Date().toISOString();
+  writeLocalUsers(users, updatedAt);
+  return queueUsersDatabaseSave(users, updatedAt);
+}
+
+function writeLocalUsers(users, updatedAt = new Date().toISOString()) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  localStorage.setItem(USERS_UPDATED_KEY, updatedAt);
 }
 
 function getActiveUser() {
@@ -2469,6 +3111,16 @@ function getActiveUser() {
   } catch {
     return null;
   }
+}
+
+function createOpenAdminUser() {
+  return {
+    username: "open-admin",
+    displayName: "المدير",
+    role: "admin",
+    permissions: adminPermissions(),
+    openAccess: true,
+  };
 }
 
 function withUserPermissions(user) {
@@ -2503,35 +3155,36 @@ function requirePermission(permission, showAlert = true) {
   return false;
 }
 
-function redirectToLogin() {
-  const page = currentPageName();
-  if (page === "login.html") return;
-
-  window.location.replace(`login.html?next=${encodeURIComponent(page)}`);
-}
-
 function currentPageName() {
   return window.location.pathname.split("/").pop() || "index.html";
 }
 
 function loadState() {
-  const fallback = { orders: [], products: [], purchases: [], customerTransactions: [], customerDebts: [] };
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return fallback;
+  if (!saved) return emptyState();
 
   try {
-    const parsed = { ...fallback, ...JSON.parse(saved) };
-    parsed.products = Array.isArray(parsed.products) && parsed.products.length
-      ? parsed.products
-      : deriveProductsFromOrders(parsed.orders);
-    parsed.orders = Array.isArray(parsed.orders) ? parsed.orders : [];
-    parsed.purchases = Array.isArray(parsed.purchases) ? parsed.purchases : [];
-    parsed.customerTransactions = Array.isArray(parsed.customerTransactions) ? parsed.customerTransactions : [];
-    parsed.customerDebts = Array.isArray(parsed.customerDebts) ? parsed.customerDebts : [];
-    return parsed;
+    return normalizeState(JSON.parse(saved));
   } catch {
-    return fallback;
+    return emptyState();
   }
+}
+
+function emptyState() {
+  return { orders: [], products: [], purchases: [], customerTransactions: [], customerDebts: [] };
+}
+
+function normalizeState(savedState) {
+  const fallback = emptyState();
+  const parsed = { ...fallback, ...(savedState || {}) };
+  parsed.products = Array.isArray(parsed.products) && parsed.products.length
+    ? parsed.products
+    : deriveProductsFromOrders(parsed.orders);
+  parsed.orders = Array.isArray(parsed.orders) ? parsed.orders : [];
+  parsed.purchases = Array.isArray(parsed.purchases) ? parsed.purchases : [];
+  parsed.customerTransactions = Array.isArray(parsed.customerTransactions) ? parsed.customerTransactions : [];
+  parsed.customerDebts = Array.isArray(parsed.customerDebts) ? parsed.customerDebts : [];
+  return parsed;
 }
 
 function deriveProductsFromOrders(orders = []) {
@@ -2554,7 +3207,123 @@ function deriveProductsFromOrders(orders = []) {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const updatedAt = new Date().toISOString();
+  writeLocalState(state, updatedAt);
+
+  if (!applyingDatabaseState) {
+    queueStateDatabaseSave(updatedAt);
+  }
+}
+
+function writeLocalState(nextState, updatedAt = new Date().toISOString()) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+  localStorage.setItem(STORAGE_UPDATED_KEY, updatedAt);
+}
+
+async function syncStateFromDatabase() {
+  if (!DATABASE_ENABLED) return;
+
+  try {
+    const response = await fetch("/api/state", { cache: "no-store" });
+    if (!response.ok) return;
+
+    const remote = await response.json();
+    const remoteState = remote.state ? normalizeState(remote.state) : null;
+    const remoteUpdatedAt = remote.updatedAt || "";
+    const localUpdatedAt = localStorage.getItem(STORAGE_UPDATED_KEY) || "";
+
+    if (remoteState && isRemoteNewer(remoteUpdatedAt, localUpdatedAt)) {
+      applyingDatabaseState = true;
+      state = remoteState;
+      writeLocalState(state, remoteUpdatedAt || new Date().toISOString());
+      render();
+      applyingDatabaseState = false;
+      return;
+    }
+
+    if ((!remoteState || !isRemoteNewer(remoteUpdatedAt, localUpdatedAt)) && hasStateData(state)) {
+      queueStateDatabaseSave(localUpdatedAt || new Date().toISOString());
+    }
+  } catch {
+    applyingDatabaseState = false;
+  }
+}
+
+function queueStateDatabaseSave(updatedAt) {
+  if (!DATABASE_ENABLED) return Promise.resolve();
+
+  clearTimeout(stateSaveTimer);
+  return new Promise((resolve) => {
+    stateSaveTimer = setTimeout(async () => {
+      try {
+        await fetch("/api/state", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state, updatedAt }),
+        });
+      } catch {
+        // Local storage remains the fallback when the server is offline.
+      }
+      resolve();
+    }, 250);
+  });
+}
+
+async function syncUsersFromDatabase() {
+  if (!DATABASE_ENABLED) return;
+
+  try {
+    const response = await fetch("/api/users", { cache: "no-store" });
+    if (!response.ok) return;
+
+    const remote = await response.json();
+    const remoteUsers = Array.isArray(remote.users) ? remote.users.map(withUserPermissions) : [];
+    const remoteUpdatedAt = remote.updatedAt || "";
+    const localUpdatedAt = localStorage.getItem(USERS_UPDATED_KEY) || "";
+
+    if (remoteUsers.length && isRemoteNewer(remoteUpdatedAt, localUpdatedAt)) {
+      writeLocalUsers(remoteUsers, remoteUpdatedAt || new Date().toISOString());
+      return;
+    }
+
+    const localUsers = loadUsers().map(withUserPermissions);
+    if (localUsers.length && (!remoteUsers.length || !isRemoteNewer(remoteUpdatedAt, localUpdatedAt))) {
+      queueUsersDatabaseSave(localUsers, localUpdatedAt || new Date().toISOString());
+    }
+  } catch {
+    // Users stay available from local storage when the server is offline.
+  }
+}
+
+function queueUsersDatabaseSave(users, updatedAt) {
+  if (!DATABASE_ENABLED) return Promise.resolve();
+
+  clearTimeout(usersSaveTimer);
+  return new Promise((resolve) => {
+    usersSaveTimer = setTimeout(async () => {
+      try {
+        await fetch("/api/users", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ users, updatedAt }),
+        });
+      } catch {
+        // Local storage remains the fallback when the server is offline.
+      }
+      resolve();
+    }, 250);
+  });
+}
+
+function hasStateData(nextState) {
+  return ["orders", "products", "purchases", "customerTransactions", "customerDebts"]
+    .some((key) => Array.isArray(nextState[key]) && nextState[key].length > 0);
+}
+
+function isRemoteNewer(remoteUpdatedAt, localUpdatedAt) {
+  if (!localUpdatedAt) return true;
+  if (!remoteUpdatedAt) return false;
+  return new Date(remoteUpdatedAt).getTime() >= new Date(localUpdatedAt).getTime();
 }
 
 function normalize(value) {
@@ -2565,6 +3334,15 @@ function safeCustomerCell(order) {
   const phone = order.customerPhone ? `<small>${escapeHtml(order.customerPhone)}</small>` : "";
   const notes = order.notes ? `<small>${escapeHtml(order.notes)}</small>` : "";
   return `${escapeHtml(order.customerName)}${phone}${notes}`;
+}
+
+function orderCustomerOpenCell(order) {
+  return `
+    <button class="customer-open-button" data-action="open-customer-orders" type="button">
+      ${safeCustomerCell(order)}
+      <small>فتح صفحة الدفع</small>
+    </button>
+  `;
 }
 
 function escapeHtml(value) {

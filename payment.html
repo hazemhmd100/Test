@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html { background: #f3f0e8; }
+    html[data-theme="dark"] { background: #171b16; }
+  </style>
+  <script>
+    try {
+      if (localStorage.getItem("sales-manager-theme") === "dark") {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (error) {}
+  </script>
+  <title>دفع العميل</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">دفع سريع</p>
+      <h1>صفحة دفع العميل</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a href="orders.html">إضافة طلب</a>
+    <a href="order-list.html">قائمة الطلبات</a>
+    <a href="customers.html">العملاء والديون</a>
+    <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main class="layout">
+    <section class="summary-grid compact-summary" aria-label="ملخص الدفع">
+      <article class="metric">
+        <span>العميل</span>
+        <strong id="paymentCustomerName">-</strong>
+      </article>
+      <article class="metric warn">
+        <span>الدين الحالي</span>
+        <strong id="paymentCustomerDebt">0</strong>
+      </article>
+      <article class="metric good">
+        <span>رصيد العميل</span>
+        <strong id="paymentCustomerCredit">0</strong>
+      </article>
+      <article class="metric">
+        <span>آخر طلب</span>
+        <strong id="paymentLastOrderDate">-</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head split">
+        <div>
+          <h2>تسجيل دفعة</h2>
+          <p id="paymentCustomerInfo">اختر العميل من قائمة الطلبات أولاً.</p>
+        </div>
+        <div class="row-actions">
+          <a class="button-link" href="order-list.html">رجوع لقائمة الطلبات</a>
+          <a class="button-link" href="customers.html">صفحة العملاء</a>
+        </div>
+      </div>
+
+      <form id="paymentForm" class="form-grid direct-customer-row">
+        <label>
+          اسم العميل
+          <input id="paymentCustomerEditName" placeholder="اسم العميل">
+        </label>
+        <label>
+          رقم الجوال
+          <input id="paymentCustomerEditPhone" inputmode="tel" placeholder="رقم الجوال">
+        </label>
+        <label>
+          المبلغ المدفوع
+          <input id="paymentAmount" inputmode="decimal" placeholder="المبلغ">
+        </label>
+        <label>
+          خصم وقت الدفع
+          <input id="paymentDiscount" inputmode="decimal" placeholder="اختياري">
+        </label>
+        <label>
+          طريقة الدفع
+          <select id="paymentMethod">
+            <option value="كاش">كاش</option>
+            <option value="بنك">بنك</option>
+            <option value="محفظة جوال">محفظة جوال</option>
+            <option value="محفظة بال بي">محفظة بال بي</option>
+          </select>
+        </label>
+        <label>
+          التاريخ
+          <input id="paymentDate" type="date" required>
+        </label>
+        <label>
+          ملاحظة
+          <input id="paymentNote" placeholder="اختياري">
+        </label>
+        <button class="primary" type="submit">حفظ الدفعة</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head split">
+        <div>
+          <h2>آخر طلب للعميل</h2>
+          <p>هذه آخر عملية طلب مسجلة لهذا العميل.</p>
+        </div>
+        <a id="paymentEditOrder" class="button-link" href="orders.html">تعديل آخر طلب</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>المنتجات</th>
+              <th>الإجمالي</th>
+              <th>الخصم</th>
+              <th>المدفوع</th>
+              <th>الدين</th>
+              <th>الرصيد</th>
+              <th>التحويل</th>
+              <th>المراجعة</th>
+            </tr>
+          </thead>
+          <tbody id="paymentLastOrderTable"></tbody>
+        </table>
+      </div>
+      <p id="paymentEmpty" class="empty show">لا يوجد طلب محدد للدفع.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

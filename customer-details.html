@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html { background: #f3f0e8; }
+    html[data-theme="dark"] { background: #171b16; }
+  </style>
+  <script>
+    try {
+      if (localStorage.getItem("sales-manager-theme") === "dark") {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (error) {}
+  </script>
+  <title>تفاصيل العميل</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">ملف العميل</p>
+      <h1 id="customerDetailsTitle">تفاصيل العميل</h1>
+    </div>
+    <div class="header-actions">
+      <button id="exportCsv" type="button">تصدير CSV</button>
+      <button id="resetData" type="button" class="danger">مسح البيانات</button>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="روابط الصفحات">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html" data-permission="viewProducts">المنتجات</a>
+    <a href="orders.html">إضافة طلب</a>
+    <a href="order-list.html">قائمة الطلبات</a>
+    <a href="payment.html">الدفع</a>
+    <a class="active" href="customers.html">العملاء والديون</a>
+    <a href="purchases.html" data-permission="viewPurchases">المشتريات</a>
+    <a href="users.html" data-permission="manageUsers">المستخدمين</a>
+  </nav>
+
+  <main id="customerDetailsPage" class="layout">
+    <section class="summary-grid compact-summary" aria-label="ملخص العميل">
+      <article class="metric">
+        <span>العميل</span>
+        <strong id="detailCustomerName">-</strong>
+      </article>
+      <article class="metric">
+        <span>الهاتف</span>
+        <strong id="detailCustomerPhone">-</strong>
+      </article>
+      <article class="metric warn">
+        <span>الدين الحالي</span>
+        <strong id="detailCustomerDebt">0</strong>
+      </article>
+      <article class="metric good">
+        <span>الرصيد</span>
+        <strong id="detailCustomerCredit">0</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head split">
+        <div>
+          <h2>طلبات وديون العميل</h2>
+          <p id="customerDetailsInfo">كل الطلبات والديون المسجلة لهذا العميل.</p>
+        </div>
+        <div class="row-actions">
+          <a id="customerDetailsPaymentLink" class="button-link" href="customers.html">تسجيل دفعة</a>
+          <a class="button-link" href="customers.html">رجوع للعملاء</a>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>المنتجات</th>
+              <th>الإجمالي</th>
+              <th>مدفوع</th>
+              <th>دين</th>
+              <th>رصيد</th>
+              <th>تحويل</th>
+              <th>مراجعة</th>
+            </tr>
+          </thead>
+          <tbody id="customerDetailsRows"></tbody>
+        </table>
+      </div>
+      <p id="customerDetailsEmpty" class="empty">لا توجد تفاصيل لهذا العميل.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>حركات الرصيد</h2>
+        <p>سجل الدفعات والتحويلات الخاصة بالعميل.</p>
+      </div>
+      <div id="customerDetailsTransactions"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
